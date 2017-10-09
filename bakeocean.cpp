@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <d3d11.h>
 #include "OceanSimulator.h"
+#include "SinBaseNoise.h"
 
 //HINSTANCE               g_hInst = NULL;
 HWND                    g_hWnd = NULL;
@@ -16,6 +17,7 @@ IDXGISwapChain*         g_pSwapChain = NULL;
 ID3D11RenderTargetView* g_pRenderTargetView = NULL;
 
 COceanSimulator *OceanSimulator[3] = { 0 };
+SinBaseNoise    *pSInbese = NULL;
 //--------------------------------------------------------------------------------------
 // Called every time the application receives a message
 //--------------------------------------------------------------------------------------
@@ -174,6 +176,13 @@ void Render()
 		if(p)
 			p->updateDisplacementMap(0);
 	}
+
+	if (pSInbese)
+	{
+		pSInbese->Dispatch();
+		SAFE_DELETE(pSInbese);
+	}
+		
 	// Just clear the backbuffer
 	float ClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f }; //red,green,blue,alpha
 	g_pImmediateContext->ClearRenderTargetView(g_pRenderTargetView, ClearColor);
@@ -190,67 +199,38 @@ int main()
 		CleanupDevice();
 		return 0;
 	}
-	CBakeInfo info;
-	info.fLength = 2000.f;
-	info.iDimension = 128;
-	info.wave_amplitude = 0.35f;
-	info.wind_dir = D3DXVECTOR2(0.8f, 0.6f);
-	info.wind_speed = 600.f;
-	info.choppy_scale = 1.3f;
-	info.time_scale = 1.f;
-	info.fMaxOmega = D3DX_16F_MAX;
-	info.wind_dependency = 0.07f;
+	srand(GetTickCount());
+	//CBakeInfo info;
+	//info.fLength = 2000.f;
+	//info.iDimension = 128;
+	//info.wave_amplitude = 0.35f;
+	//info.wind_dir = D3DXVECTOR2(0.8f, 0.6f);
+	//info.wind_speed = 600.f;
+	//info.choppy_scale = 1.3f;
+	//info.time_scale = 1.f;
+	//info.fMaxOmega = D3DX_16F_MAX;
+	//info.wind_dependency = 0.07f;
 
-	info.fLength = 500.f;
-	OceanSimulator[0] = new COceanSimulator(info);
-	OceanSimulator[0]->SetFPS(24.f);
-	OceanSimulator[0]->SetName(TEXT("mediumwave"));
-	float fMinOmega = OceanSimulator[0]->ComputeCycleAndOmega();
-	OceanSimulator[0]->Init();
+	//info.fLength = 500.f;
+	//OceanSimulator[0] = new COceanSimulator(info);
+	//OceanSimulator[0]->SetFPS(24.f);
+	//OceanSimulator[0]->SetName(TEXT("mediumwave"));
+	//float fMinOmega = OceanSimulator[0]->ComputeCycleAndOmega();
+	//OceanSimulator[0]->Init();
 
-	info.fLength = 2000;
-	info.iDimension = 128;
-	OceanSimulator[1] = new COceanSimulator(info);
-	OceanSimulator[1]->SetFPS(10.f);
-	OceanSimulator[1]->SetName(TEXT("largewave"));
-	//OceanSimulator[1]->SetCycle(3.6f);
-	OceanSimulator[1]->SetMaxOmega(fMinOmega);
-	fMinOmega = OceanSimulator[1]->ComputeCycleAndOmega();
-	OceanSimulator[1]->Init();
+	//info.fLength = 2000;
+	//info.iDimension = 128;
+	//OceanSimulator[1] = new COceanSimulator(info);
+	//OceanSimulator[1]->SetFPS(10.f);
+	//OceanSimulator[1]->SetName(TEXT("largewave"));
+	////OceanSimulator[1]->SetCycle(3.6f);
+	//OceanSimulator[1]->SetMaxOmega(D3DX_16F_MAX/*fMinOmega*/);
+	//fMinOmega = OceanSimulator[1]->ComputeCycleAndOmega();
+	//OceanSimulator[1]->Init();
 
-	/*info.fLength = 125.f;
-	OceanSimulator[0] = new COceanSimulator(info);
-	OceanSimulator[0]->SetFPS(30.f);
-	//OceanSimulator[0]->SetCycle(0.297415078f);
-	float fMaxOmega = OceanSimulator[0]->ComputeCycleAndOmega();
-	OceanSimulator[0]->Init();
-
-	info.fLength = 500.f;
-	OceanSimulator[1] = new COceanSimulator(info);
-	OceanSimulator[1]->SetFPS(15.f);
-	OceanSimulator[1]->SetMaxOmega(fMaxOmega);
-	fMaxOmega = OceanSimulator[1]->ComputeCycleAndOmega();
-	OceanSimulator[1]->Init();
-
-	info.fLength = 2000.f;
-	OceanSimulator[2] = new COceanSimulator(info);
-	OceanSimulator[2]->SetFPS(15.f);
-	OceanSimulator[2]->SetMaxOmega(fMaxOmega);
-	fMaxOmega = OceanSimulator[2]->ComputeCycleAndOmega();
-	OceanSimulator[2]->Init();*/
-
-	CCycleOmega CycleOmega;
-	COceanSimulator::CalulerCycleAndOmega(info.fLength, info.iDimension, info.time_scale, CycleOmega);
-
-	info.fLength = 5000.f;
-	CCycleOmega CycleOmega1;
-	COceanSimulator::CalulerCycleAndOmega(info.fLength, info.iDimension, info.time_scale, CycleOmega1);
-
-	info.fLength = 1250.f;
-	CCycleOmega CycleOmega2;
-	COceanSimulator::CalulerCycleAndOmega(info.fLength, info.iDimension, info.time_scale, CycleOmega2);
+	pSInbese = new SinBaseNoise();
 	
-	
+	pSInbese->Init();
 
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
@@ -268,6 +248,7 @@ int main()
 	SAFE_DELETE(OceanSimulator[0]);
 	SAFE_DELETE(OceanSimulator[1]);
 	SAFE_DELETE(OceanSimulator[2]);
+	SAFE_DELETE(pSInbese);
 	CleanupDevice();
     return 0;
 }
